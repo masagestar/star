@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <title>별다방스웨디시 - 매장관리 시스템</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        /* 모바일 호환성 강화 */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            -webkit-overflow-scrolling: touch;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        /* 타이머 카드 스타일 */
+        .timer-card {
+            transition: all 0.2s ease;
+            min-height: 400px;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+        
+        .timer-card.dragging {
+            opacity: 0.7;
+            -webkit-transform: rotate(2deg) scale(0.95);
+            transform: rotate(2deg) scale(0.95);
+        }
+        
+        .timer-card.drag-over {
+            border: 3px dashed #3B82F6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        
+        /* 진행률 링 */
+        .progress-ring {
+            -webkit-transform: rotate(-90deg);
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            transition: stroke-dasharray 0.5s ease;
+        }
+        
+        /* 버튼 스타일 - 모바일 최적화 */
+        .mobile-btn {
+            min-height: 48px;
+            min-width: 80px;
+            padding: 12px 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            -webkit-appearance: none;
+            appearance: none;
+            border: 2px solid #000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+        
+        .mobile-btn:active {
+            -webkit-transform: scale(0.95);
+            transform: scale(0.95);
+        }
+        
+        /* 각 버튼별 색상 - 최고 가시성 */
+        .btn-start {
+            background-color: #10B981 !important;
+            color: white !important;
+            border-color: #065F46 !important;
+        }
+        .btn-start:active {
+            background-color: #059669 !important;
+        }
+        
+        .btn-pause {
+            background-color: #F59E0B !important;
+            color: black !important;
+            border-color: #92400E !important;
+        }
+        .btn-pause:active {
+            background-color: #D97706 !important;
+        }
+        
+        .btn-complete {
+            background-color: #3B82F6 !important;
+            color: white !important;
+            border-color: #1E3A8A !important;
+        }
+        .btn-complete:active {
+            background-color: #2563EB !important;
+        }
+        
+        .btn-reset {
+            background-color: #EF4444 !important;
+            color: white !important;
+            border: 3px solid #000 !important;
+            font-weight: 900 !important;
+        }
+        .btn-reset:active {
+            background-color: #DC2626 !important;
+        }
+        
+        .btn-delete {
+            background-color: #991B1B !important;
+            color: white !important;
+            border-color: #7F1D1D !important;
+        }
+        .btn-delete:active {
+            background-color: #7F1D1D !important;
+        }
+        
+        .btn-add30 {
+            background-color: #7C3AED !important;
+            color: white !important;
+            border-color: #4C1D95 !important;
+        }
+        .btn-add30:active {
+            background-color: #6D28D9 !important;
+        }
+        
+        /* 입력 필드 스타일 */
+        .mobile-input {
+            -webkit-appearance: none;
+            appearance: none;
+            border: 2px solid #3B82F6;
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 16px;
+            background: white;
+            width: 100%;
+        }
+        
+        /* 대시보드 카드 */
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
+        }
+        
+        /* 반응형 그리드 */
+        .mobile-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            padding: 16px;
+        }
+        
+        @media (min-width: 768px) {
+            .mobile-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .mobile-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (min-width: 1280px) {
+            .mobile-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        /* 시간 버튼 스타일 */
+        .time-btn {
+            padding: 8px 12px;
+            margin: 2px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            min-height: 36px;
+        }
+        
+        .time-btn.selected {
+            background-color: #3B82F6;
+            color: white;
+        }
+        
+        .time-btn:active {
+            -webkit-transform: scale(0.95);
+            transform: scale(0.95);
+        }
+        
+        /* 편집 모드 스타일 */
+        .editing {
+            background-color: rgba(59, 130, 246, 0.1);
+            border: 2px solid #3B82F6;
+            border-radius: 4px;
+        }
+        
+        /* 텍스트 선택 허용 (입력 시에만) */
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        
+        /* iOS 스크롤 개선 */
+        .scroll-container {
+            -webkit-overflow-scrolling: touch;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 헤더 -->
+    <div class="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto p-4">
+            <div class="text-center mb-4">
+                <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-2">
+                    <i class="fas fa-spa text-green-600 mr-2"></i>별다방스웨디시
+                </h1>
+                <div class="text-lg md:text-2xl font-mono text-blue-600" id="currentTime">00:00:00</div>
+                <div class="text-sm md:text-base text-gray-600" id="currentDate">2025년 1월 24일</div>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-center gap-2">
+                <button id="addTimer" class="mobile-btn bg-blue-600 text-white">
+                    <i class="fas fa-plus mr-2"></i>순번 추가
+                </button>
+                <button id="startAll" class="mobile-btn bg-green-600 text-white">
+                    <i class="fas fa-play mr-2"></i>전체 시작
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 대시보드 -->
+    <div class="max-w-7xl mx-auto p-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <!-- 룸 현황 -->
+            <div class="dashboard-card">
+                <h3 class="text-lg font-bold mb-3 text-gray-800">
+                    <i class="fas fa-home text-blue-600 mr-2"></i>룸 현황
+                </h3>
+                <div id="roomStatus" class="space-y-2">
+                    <div class="text-sm text-gray-600">로딩 중...</div>
+                </div>
+            </div>
+
+            <!-- 순번 현황 -->
+            <div class="dashboard-card">
+                <h3 class="text-lg font-bold mb-3 text-gray-800">
+                    <i class="fas fa-list text-purple-600 mr-2"></i>순번 현황
+                </h3>
+                <div id="queueStatus" class="space-y-2">
+                    <div class="text-sm text-gray-600">로딩 중...</div>
+                </div>
+            </div>
+
+            <!-- 일정산 -->
+            <div class="dashboard-card">
+                <h3 class="text-lg font-bold mb-3 text-gray-800">
+                    <i class="fas fa-coins text-green-600 mr-2"></i>일정산
+                </h3>
+                <div id="dailySettlement" class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm">오늘 총 매출:</span>
+                        <span class="font-bold text-green-600 cursor-pointer" id="totalRevenue">0원</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm">완료 서비스:</span>
+                        <span id="completedServices">0건</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm">평균 금액:</span>
+                        <span id="averageAmount">0원</span>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <button id="editTotalRevenue" class="mobile-btn text-xs bg-blue-500 text-white">
+                            <i class="fas fa-edit"></i> 수정
+                        </button>
+                        <button id="resetDaily" class="mobile-btn text-xs bg-red-500 text-white">
+                            <i class="fas fa-refresh"></i> 리셋
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 담당자 정산 -->
+            <div class="dashboard-card">
+                <h3 class="text-lg font-bold mb-3 text-gray-800">
+                    <i class="fas fa-users text-orange-600 mr-2"></i>정산 (담당자별)
+                </h3>
+                <div id="therapistSettlement" class="space-y-2">
+                    <div class="text-sm text-gray-600">로딩 중...</div>
+                </div>
+                <button id="addTherapist" class="mobile-btn text-xs bg-purple-500 text-white mt-2 w-full">
+                    <i class="fas fa-plus mr-1"></i>담당자 추가
+                </button>
+            </div>
+        </div>
+
+        <!-- 완료 서비스 로그 -->
+        <div class="dashboard-card mb-6">
+            <h3 class="text-lg font-bold mb-3 text-gray-800">
+                <i class="fas fa-clipboard-list text-blue-600 mr-2"></i>완료 서비스
+            </h3>
+            <div id="completedLog" class="space-y-2 max-h-40 overflow-y-auto scroll-container">
+                <div class="text-sm text-gray-600">완료된 서비스가 없습니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 타이머 그리드 -->
+    <div class="max-w-7xl mx-auto p-4">
+        <div id="timerGrid" class="mobile-grid">
+            <!-- 타이머 카드들이 여기에 추가됩니다 -->
+        </div>
+        
+        <!-- 빈 상태 -->
+        <div id="emptyState" class="text-center py-10">
+            <i class="fas fa-clock text-4xl text-gray-300 mb-4"></i>
+            <h2 class="text-xl font-bold text-gray-400 mb-4">타이머가 없습니다</h2>
+            <p class="text-gray-500 mb-6">새로운 순번을 추가해보세요</p>
+            <button onclick="addNewTimer()" class="mobile-btn bg-blue-600 text-white">
+                <i class="fas fa-plus mr-2"></i>첫 번째 순번 추가
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        var timers = [];
+        var masterInterval = null;
+        var editingTimerId = null;
+        var editingField = null;
+        var completedServices = [];
+        var therapistData = {};
+
+        // 서비스 요금표
+        var serviceRates = {
+            40: 40000,
+            60: 60000,
+            80: 60000,
+            90: 70000,
+            100: 80000,
+            120: 120000,
+            30: 50000 // 추가 30분
+        };
+
+        // DOM 로드 완료 후 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 매장관리 시스템 초기화...');
+            
+            // 현재 시간 업데이트 시작
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            
+            // 저장된 데이터 로드
+            loadData();
+            
+            // 화면 업데이트
+            updateDisplay();
+            updateDashboard();
+            
+            // 마스터 타이머 시작
+            startMasterTimer();
+            
+            // 이벤트 리스너 설정
+            setupEventListeners();
+            
+            console.log('✅ 초기화 완료');
+        });
+
+        // 현재 시간 업데이트
+        function updateCurrentTime() {
+            var now = new Date();
+            var timeStr = now.getHours().toString().padStart(2, '0') + ':' +
+                         now.getMinutes().toString().padStart(2, '0') + ':' +
+                         now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('currentTime').textContent = timeStr;
+            
+            var dateStr = now.getFullYear() + '년 ' + (now.getMonth() + 1) + '월 ' + now.getDate() + '일';
+            document.getElementById('currentDate').textContent = dateStr;
+        }
+
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            // 순번 추가 버튼
+            document.getElementById('addTimer').addEventListener('click', addNewTimer);
+            
+            // 전체 시작 버튼
+            document.getElementById('startAll').addEventListener('click', startAllTimers);
+            
+            // 일정산 수정/리셋
+            document.getElementById('editTotalRevenue').addEventListener('click', editTotalRevenue);
+            document.getElementById('resetDaily').addEventListener('click', resetDaily);
+            
+            // 담당자 추가
+            document.getElementById('addTherapist').addEventListener('click', addTherapist);
+            
+            // 전역 이벤트 위임
+            document.addEventListener('click', handleGlobalClick);
+            document.addEventListener('change', handleGlobalChange);
+            
+            // 터치 이벤트 (모바일 최적화)
+            document.addEventListener('touchstart', function(e) {
+                // 터치 시작 시 처리
+            }, {passive: true});
+            
+            document.addEventListener('touchend', function(e) {
+                // 터치 종료 시 처리
+            }, {passive: true});
+        }
+
+        // 전역 클릭 이벤트 처리
+        function handleGlobalClick(e) {
+            var target = e.target.closest('[data-action]');
+            if (!target) return;
+
+            var action = target.dataset.action;
+            var timerId = parseInt(target.closest('.timer-card')?.dataset.timerId);
+            
+            e.preventDefault();
+            e.stopPropagation();
+
+            switch(action) {
+                case 'start':
+                    if (timerId) startTimer(timerId);
+                    break;
+                case 'pause':
+                    if (timerId) pauseTimer(timerId);
+                    break;
+                case 'complete':
+                    if (timerId) completeTimer(timerId);
+                    break;
+                case 'reset':
+                    if (timerId) resetTimer(timerId);
+                    break;
+                case 'delete':
+                    if (timerId) deleteTimer(timerId);
+                    break;
+                case 'add30':
+                    if (timerId) addTime(timerId, 30);
+                    break;
+            }
+        }
+
+        // 전역 변경 이벤트 처리
+        function handleGlobalChange(e) {
+            if (e.target.classList.contains('time-btn')) {
+                var timerId = parseInt(e.target.closest('.timer-card').dataset.timerId);
+                var minutes = parseInt(e.target.value);
+                updateServiceTime(timerId, minutes);
+            }
+        }
+
+        // 새 타이머 추가
+        function addNewTimer() {
+            var newTimer = {
+                id: Date.now(),
+                roomName: '룸' + (timers.length + 1),
+                therapist: '테라피스트',
+                serviceMinutes: 90,
+                remainingSeconds: 90 * 60,
+                totalSeconds: 90 * 60,
+                status: 'waiting', // waiting, running, paused, completed
+                startTime: null,
+                addedMinutes: 0
+            };
+            
+            // 5개 룸 순환 (룸1-4, 커플방)
+            if (timers.length >= 5) {
+                var roomIndex = timers.length % 5;
+                if (roomIndex === 4) {
+                    newTimer.roomName = '커플방';
+                } else {
+                    newTimer.roomName = '룸' + (roomIndex + 1);
+                }
+            } else if (timers.length === 4) {
+                newTimer.roomName = '커플방';
+            }
+            
+            timers.push(newTimer);
+            saveData();
+            updateDisplay();
+            updateDashboard();
+            
+            console.log('➕ 새 타이머 추가:', newTimer.roomName);
+        }
+
+        // 화면 업데이트
+        function updateDisplay() {
+            var grid = document.getElementById('timerGrid');
+            var emptyState = document.getElementById('emptyState');
+            
+            if (timers.length === 0) {
+                grid.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            // 편집 중인 타이머가 있으면 해당 타이머만 업데이트하지 않음
+            if (editingTimerId) {
+                updateTimersExceptEditing();
+            } else {
+                grid.innerHTML = timers.map(function(timer, index) {
+                    return createTimerCard(timer, index);
+                }).join('');
+                setupDragAndDrop();
+            }
+        }
+
+        // 편집 중이 아닌 타이머만 업데이트
+        function updateTimersExceptEditing() {
+            timers.forEach(function(timer, index) {
+                if (timer.id !== editingTimerId) {
+                    updateSingleTimer(timer, index);
+                }
+            });
+        }
+
+        // 개별 타이머 업데이트
+        function updateSingleTimer(timer, index) {
+            var card = document.querySelector('[data-timer-id="' + timer.id + '"]');
+            if (card) {
+                card.outerHTML = createTimerCard(timer, index);
+            }
+        }
+
+        // 타이머 카드 생성
+        function createTimerCard(timer, index) {
+            var progress = timer.totalSeconds > 0 ? 
+                Math.round(((timer.totalSeconds - timer.remainingSeconds) / timer.totalSeconds) * 100) : 0;
+            
+            var minutes = Math.floor(timer.remainingSeconds / 60);
+            var seconds = timer.remainingSeconds % 60;
+            var timeDisplay = minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+            
+            var circumference = 2 * Math.PI * 45;
+            var strokeDasharray = circumference;
+            var strokeDashoffset = circumference - (progress / 100) * circumference;
+            
+            var statusColor = 'bg-gray-100';
+            var statusText = '대기중';
+            var statusIcon = 'pause';
+            
+            if (timer.status === 'running') {
+                statusColor = 'bg-blue-100 border-blue-300';
+                statusText = '진행중';
+                statusIcon = 'play';
+            } else if (timer.status === 'completed') {
+                statusColor = 'bg-green-100 border-green-300';
+                statusText = '완료';
+                statusIcon = 'check';
+            } else if (timer.status === 'paused') {
+                statusColor = 'bg-yellow-100 border-yellow-300';
+                statusText = '일시정지';
+                statusIcon = 'pause';
+            }
+
+            var startTimeStr = timer.startTime ? 
+                new Date(timer.startTime).toLocaleTimeString('ko-KR', { hour12: true, hour: 'numeric', minute: '2-digit' }) : 
+                '미정';
+            
+            var endTimeStr = timer.startTime && timer.totalSeconds ? 
+                new Date(timer.startTime + (timer.totalSeconds * 1000)).toLocaleTimeString('ko-KR', { hour12: true, hour: 'numeric', minute: '2-digit' }) : 
+                '미정';
+
+            var roomIcon = timer.roomName === '커플방' ? '💑' : '🏠';
+
+            return '<div class="timer-card ' + statusColor + ' border-2 rounded-xl p-4 cursor-move" data-timer-id="' + timer.id + '" draggable="true">' +
+                    
+                    '<!-- 헤더 -->' +
+                    '<div class="flex items-center justify-between mb-4">' +
+                        '<div class="flex items-center">' +
+                            '<span class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-3">' +
+                                (index + 1) +
+                            '</span>' +
+                            '<i class="fas fa-' + statusIcon + ' text-lg"></i>' +
+                        '</div>' +
+                        '<span class="text-sm font-semibold text-gray-600">' + statusText + '</span>' +
+                    '</div>' +
+
+                    '<!-- 룸 정보 -->' +
+                    '<div class="text-center mb-4">' +
+                        '<div class="room-name text-lg font-bold cursor-pointer p-2" onclick="editRoomName(this, ' + timer.id + ')">' +
+                            roomIcon + ' ' + timer.roomName +
+                        '</div>' +
+                        '<div class="therapist-name text-gray-600 cursor-pointer p-1" onclick="editTherapistName(this, ' + timer.id + ')">' +
+                            timer.therapist +
+                        '</div>' +
+                    '</div>' +
+
+                    '<!-- 진행률 링 -->' +
+                    '<div class="flex justify-center mb-4">' +
+                        '<div class="relative w-20 h-20">' +
+                            '<svg class="progress-ring w-20 h-20">' +
+                                '<circle cx="40" cy="40" r="35" stroke="#E5E7EB" stroke-width="4" fill="none"/>' +
+                                '<circle cx="40" cy="40" r="35" stroke="#3B82F6" stroke-width="4" fill="none" ' +
+                                        'stroke-dasharray="' + strokeDasharray + '" ' +
+                                        'stroke-dashoffset="' + strokeDashoffset + '" ' +
+                                        'class="progress-ring-circle"/>' +
+                            '</svg>' +
+                            '<div class="absolute inset-0 flex items-center justify-center">' +
+                                '<span class="text-xs font-bold">' + progress + '%</span>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+
+                    '<!-- 남은 시간 -->' +
+                    '<div class="text-center mb-4">' +
+                        '<div class="text-2xl font-mono font-bold ' + (timer.remainingSeconds <= 300 ? 'text-red-600' : 'text-gray-800') + '">' +
+                            timeDisplay +
+                        '</div>' +
+                    '</div>' +
+
+                    '<!-- 시간 정보 -->' +
+                    '<div class="bg-white bg-opacity-50 rounded-lg p-3 mb-4 text-xs">' +
+                        '<div class="flex justify-between mb-1">' +
+                            '<span><i class="fas fa-clock mr-1"></i>시작:</span>' +
+                            '<span>' + startTimeStr + '</span>' +
+                        '</div>' +
+                        '<div class="flex justify-between mb-1">' +
+                            '<span><i class="fas fa-flag mr-1"></i>마감:</span>' +
+                            '<span>' + endTimeStr + '</span>' +
+                        '</div>' +
+                        '<div class="flex justify-between">' +
+                            '<span><i class="fas fa-timer mr-1"></i>총시간:</span>' +
+                            '<span>' + (timer.serviceMinutes + timer.addedMinutes) + '분</span>' +
+                        '</div>' +
+                    '</div>' +
+
+                    '<!-- 서비스 시간 선택 -->' +
+                    '<div class="mb-4">' +
+                        '<div class="text-xs font-semibold mb-2">서비스 시간</div>' +
+                        '<div class="grid grid-cols-3 gap-1">' +
+                            [40, 60, 80, 90, 100, 120].map(function(min) {
+                                return '<button class="time-btn ' + (timer.serviceMinutes === min ? 'selected' : 'bg-white hover:bg-gray-50') + '" ' +
+                                       'onclick="updateServiceTime(' + timer.id + ', ' + min + ')">' + min + '분</button>';
+                            }).join('') +
+                        '</div>' +
+                    '</div>' +
+
+                    '<!-- 제어 버튼 -->' +
+                    '<div class="grid grid-cols-2 gap-2 mb-2">' +
+                        '<button data-action="start" class="mobile-btn btn-start text-xs">' +
+                            '<i class="fas fa-play mr-1"></i>시작' +
+                        '</button>' +
+                        '<button data-action="pause" class="mobile-btn btn-pause text-xs">' +
+                            '<i class="fas fa-pause mr-1"></i>정지' +
+                        '</button>' +
+                        '<button data-action="complete" class="mobile-btn btn-complete text-xs">' +
+                            '<i class="fas fa-check mr-1"></i>완료' +
+                        '</button>' +
+                        '<button data-action="reset" class="mobile-btn btn-reset text-xs">' +
+                            '<i class="fas fa-refresh mr-1"></i>리셋' +
+                        '</button>' +
+                        '<button data-action="delete" class="mobile-btn btn-delete text-xs">' +
+                            '<i class="fas fa-trash mr-1"></i>삭제' +
+                        '</button>' +
+                        '<button data-action="add30" class="mobile-btn btn-add30 text-xs">' +
+                            '<i class="fas fa-plus mr-1"></i>30분' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+        }
+
+        // 마스터 타이머 시작
+        function startMasterTimer() {
+            if (masterInterval) clearInterval(masterInterval);
+            
+            masterInterval = setInterval(function() {
+                var hasRunning = false;
+                
+                timers.forEach(function(timer) {
+                    if (timer.status === 'running' && timer.remainingSeconds > 0) {
+                        hasRunning = true;
+                        timer.remainingSeconds--;
+                        
+                        if (timer.remainingSeconds <= 0) {
+                            completeTimer(timer.id);
+                        }
+                    }
+                });
+                
+                if (hasRunning) {
+                    updateDisplay();
+                    updateDashboard();
+                    saveData();
+                }
+            }, 1000);
+        }
+
+        // 타이머 시작
+        function startTimer(id) {
+            var timer = timers.find(function(t) { return t.id === id; });
+            if (!timer) return;
+            
+            if (!timer.startTime) {
+                timer.startTime = Date.now();
+            }
+            
+            timer.status = 'running';
+            updateDisplay();
+            updateDashboard();
+            saveData();
+            
+            console.log('▶️ 타이머 시작:', timer.roomName);
+        }
+
+        // 타이머 일시정지
+        function pauseTimer(id) {
+            var timer = timers.find(function(t) { return t.id === id; });
+            if (!timer) return;
+            
+            timer.status = 'paused';
+            updateDisplay();
+            updateDashboard();
+            saveData();
+            
+            console.log('⏸️ 타이머 일시정지:', timer.roomName);
+        }
+
+        // 타이머 완료
+        function completeTimer(id) {
+            var timer = timers.find(function(t) { return t.id === id; });
+            if (!timer) return;
+            
+            timer.status = 'completed';
+            timer.remainingSeconds = 0;
+            
+            // 완료 로그에 추가
+            addCompletedService(timer);
+            
+            // 담당자 데이터 업데이트
+            updateTherapistData(timer);
+            
+            // 1번 타이머인지 확인
+            var isFirstTimer = timers.findIndex(function(t) { return t.id === id; }) === 0;
+            
+            if (isFirstTimer && timers.length > 1) {
+                // 2초 후 자동 순환
+                setTimeout(function() {
+                    rotateFirstToEnd();
+                }, 2000);
+            }
+            
+            updateDisplay();
+            updateDashboard();
+            saveData();
+            
+            console.log('✅ 타이머 완료:', timer.roomName);
+        }
+
+        // 타이머 리셋
+        function resetTimer(id) {
+            var timer = timers.find(function(t) { return t.id === id; });
+            if (!timer) return;
+            
+            timer.status = 'waiting';
+            timer.remainingSeconds = timer.serviceMinutes * 60;
+            timer.totalSeconds = timer.serviceMinutes * 60;
+            timer.startTime = null;
+            timer.addedMinutes = 0;
+            
+            updateDisplay();
+            updateDashboard();
+            saveData();
+            
+            console.log('🔄 타이머 리셋:', timer.roomName);
+        }
+
+        // 타이머 삭제
+        function deleteTimer(id) {
+            timers = timers.filter(function(t) { return t.id !== id; });
+            updateDisplay();
+            updateDashboard();
+            saveData();
+            
+            console.log('🗑️ 타이머 삭제');
+        }
+
+        // 30분 추가
+        function addTime(id, minutes) {
+            var timer = timers.find(function(t) { return t.id === id; });
+            if (!timer) return;
+            
+            timer.addedMinutes += minutes;
+            timer.remainingSeconds += minutes * 60;
+            timer.totalSeconds += minutes * 60;
+            
+            updateDisplay();
+            updateDashboard();
+            saveData();
+            
+            console.log('⏰ ' + minutes + '분 추가:', timer.roomName);
+        }
+
+        // 서비스 시간 변경
+        function updateServiceTime(id, minutes) {
+            var timer = timers.find(function(t) { return t.id === id; });
+            if (!timer) return;
+            
+            timer.serviceMinutes = minutes;
+            
+            if (timer.status === 'waiting') {
+                timer.remainingSeconds = minutes * 60;
+                timer.totalSeconds = minutes * 60;
+            }
+            
+            updateDisplay();
+            updateDashboard();
+            saveData();
+            
+            console.log('🕐 서비스 시간 변경: ' + minutes + '분', timer.roomName);
+        }
+
+        // 전체 시작
+        function startAllTimers() {
+            timers.forEach(function(timer) {
+                if (timer.status === 'waiting') {
+                    startTimer(timer.id);
+                }
+            });
+            
+            console.log('▶️ 전체 시작');
+        }
+
+        // 룸명 편집
+        function editRoomName(element, id) {
+            if (editingTimerId && editingField) return;
+            
+            var timer = timers.find(function(t) { return t.id === id; });
+            if (!timer) return;
+            
+            editingTimerId = id;
+            editingField = 'roomName';
+            
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.value = timer.roomName.replace('🏠 ', '').replace('💑 ', '');
+            input.className = 'mobile-input text-center font-bold';
+            input.style.width = '100%';
+            
+            element.replaceWith(input);
+            input.focus();
+            input.select();
+            
+            var saveEdit = function() {
+                var newValue = input.value.trim();
+                if (newValue) {
+                    timer.roomName = newValue;
+                }
+                editingTimerId = null;
+                editingField = null;
+                updateDisplay();
+                updateDashboard();
+                saveData();
+            };
+            
+            input.addEventListener('blur', saveEdit);
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveEdit();
+                } else if (e.key === 'Escape') {
+                    editingTimerId = null;
+                    editingField = null;
+                    updateDisplay();
+                }
+            });
+        }
+
+        // 담당자명 편집
+        function editTherapistName(element, id) {
+            if (editingTimerId && editingField) return;
+            
+            var timer = timers.find(function(t) { return t.id === id; });
+            if (!timer) return;
+            
+            editingTimerId = id;
+            editingField = 'therapist';
+            
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.value = timer.therapist;
+            input.className = 'mobile-input text-center';
+            input.style.width = '100%';
+            
+            element.replaceWith(input);
+            input.focus();
+            input.select();
+            
+            var saveEdit = function() {
+                var newValue = input.value.trim();
+                if (newValue) {
+                    timer.therapist = newValue;
+                }
+                editingTimerId = null;
+                editingField = null;
+                updateDisplay();
+                updateDashboard();
+                saveData();
+            };
+            
+            input.addEventListener('blur', saveEdit);
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveEdit();
+                } else if (e.key === 'Escape') {
+                    editingTimerId = null;
+                    editingField = null;
+                    updateDisplay();
+                }
+            });
+        }
+
+        // 1번 타이머를 맨 끝으로 이동
+        function rotateFirstToEnd() {
+            if (timers.length <= 1) return;
+            
+            var firstTimer = timers.shift();
+            
+            // 새 서비스를 위해 리셋
+            firstTimer.status = 'waiting';
+            firstTimer.remainingSeconds = firstTimer.serviceMinutes * 60;
+            firstTimer.totalSeconds = firstTimer.serviceMinutes * 60;
+            firstTimer.startTime = null;
+            firstTimer.addedMinutes = 0;
+            
+            timers.push(firstTimer);
+            
+            updateDisplay();
+            updateDashboard();
+            saveData();
+            
+            console.log('🔄 자동 순환:', firstTimer.roomName, '→ 맨 끝으로');
+        }
+
+        // 완료 서비스 추가
+        function addCompletedService(timer) {
+            var serviceTime = timer.serviceMinutes + timer.addedMinutes;
+            var revenue = calculateRevenue(serviceTime);
+            
+            var service = {
+                id: Date.now(),
+                time: new Date().toLocaleTimeString('ko-KR', { hour12: false }),
+                roomName: timer.roomName,
+                therapist: timer.therapist,
+                serviceTime: serviceTime,
+                revenue: revenue,
+                timestamp: Date.now()
+            };
+            
+            completedServices.unshift(service);
+            
+            // 최대 20개만 유지
+            if (completedServices.length > 20) {
+                completedServices = completedServices.slice(0, 20);
+            }
+        }
+
+        // 담당자 데이터 업데이트
+        function updateTherapistData(timer) {
+            var therapistName = timer.therapist;
+            var serviceTime = timer.serviceMinutes + timer.addedMinutes;
+            var revenue = calculateRevenue(serviceTime);
+            
+            if (!therapistData[therapistName]) {
+                therapistData[therapistName] = {
+                    revenue: 0,
+                    count: 0,
+                    totalTime: 0,
+                    services: []
+                };
+            }
+            
+            therapistData[therapistName].revenue += revenue;
+            therapistData[therapistName].count += 1;
+            therapistData[therapistName].totalTime += serviceTime;
+            therapistData[therapistName].services.push(serviceTime);
+        }
+
+        // 수익 계산
+        function calculateRevenue(serviceTime) {
+            return serviceRates[serviceTime] || serviceRates[90];
+        }
+
+        // 대시보드 업데이트
+        function updateDashboard() {
+            updateRoomStatus();
+            updateQueueStatus();
+            updateDailySettlement();
+            updateTherapistSettlement();
+            updateCompletedLog();
+        }
+
+        // 룸 현황 업데이트
+        function updateRoomStatus() {
+            var roomStatus = document.getElementById('roomStatus');
+            var rooms = ['룸1', '룸2', '룸3', '룸4', '커플방'];
+            var usedRooms = [];
+            var waitingRooms = [];
+            var emptyRooms = [];
+            
+            // 사용 중인 룸과 대기 중인 룸 파악
+            timers.forEach(function(timer) {
+                if (timer.status === 'running') {
+                    usedRooms.push(timer.roomName);
+                } else if (timer.status === 'waiting' || timer.status === 'paused') {
+                    waitingRooms.push(timer.roomName);
+                }
+            });
+            
+            // 비어있는 룸 파악
+            rooms.forEach(function(room) {
+                if (!usedRooms.includes(room) && !waitingRooms.includes(room)) {
+                    emptyRooms.push(room);
+                }
+            });
+            
+            var usageRate = Math.round(((usedRooms.length + waitingRooms.length) / rooms.length) * 100);
+            
+            roomStatus.innerHTML = 
+                '<div class="flex justify-between text-sm mb-1">' +
+                    '<span>💚 사용중:</span>' +
+                    '<span>' + (usedRooms.length > 0 ? usedRooms.join(', ') : '없음') + '</span>' +
+                '</div>' +
+                '<div class="flex justify-between text-sm mb-1">' +
+                    '<span>⏳ 대기중:</span>' +
+                    '<span>' + (waitingRooms.length > 0 ? waitingRooms.join(', ') : '없음') + '</span>' +
+                '</div>' +
+                '<div class="flex justify-between text-sm mb-1">' +
+                    '<span>🔸 비어있음:</span>' +
+                    '<span>' + (emptyRooms.length > 0 ? emptyRooms.join(', ') : '없음') + '</span>' +
+                '</div>' +
+                '<div class="flex justify-between text-sm font-bold">' +
+                    '<span>📊 사용률:</span>' +
+                    '<span>' + usageRate + '% (' + (usedRooms.length + waitingRooms.length) + '/5개 룸)</span>' +
+                '</div>';
+        }
+
+        // 순번 현황 업데이트
+        function updateQueueStatus() {
+            var queueStatus = document.getElementById('queueStatus');
+            var totalQueues = timers.length;
+            var runningQueues = timers.filter(function(t) { return t.status === 'running'; });
+            var waitingQueues = timers.filter(function(t) { return t.status === 'waiting'; });
+            var completedToday = completedServices.length;
+            
+            var nextQueue = waitingQueues.length > 0 ? waitingQueues[0] : null;
+            var estimatedWait = 0;
+            
+            if (runningQueues.length > 0) {
+                var minRemaining = Math.min.apply(Math, runningQueues.map(function(t) { return t.remainingSeconds; }));
+                estimatedWait = Math.ceil(minRemaining / 60);
+            }
+            
+            queueStatus.innerHTML = 
+                '<div class="flex justify-between text-sm mb-1">' +
+                    '<span>📊 총 순번:</span>' +
+                    '<span>' + totalQueues + '개</span>' +
+                '</div>' +
+                '<div class="flex justify-between text-sm mb-1">' +
+                    '<span>▶️ 진행중:</span>' +
+                    '<span>' + runningQueues.length + '개</span>' +
+                '</div>' +
+                '<div class="flex justify-between text-sm mb-1">' +
+                    '<span>⏳ 대기중:</span>' +
+                    '<span>' + waitingQueues.length + '개</span>' +
+                '</div>' +
+                '<div class="flex justify-between text-sm mb-1">' +
+                    '<span>✅ 완료:</span>' +
+                    '<span>' + completedToday + '개</span>' +
+                '</div>' +
+                (nextQueue ? 
+                    '<div class="text-sm text-blue-600 font-bold">' +
+                        '🔄 다음: ' + nextQueue.roomName + ' (' + nextQueue.therapist + ', ' + nextQueue.serviceMinutes + '분)' +
+                    '</div>' : '') +
+                (estimatedWait > 0 ? 
+                    '<div class="text-sm text-orange-600">' +
+                        '⏰ 예상 대기: ' + estimatedWait + '분' +
+                    '</div>' : '');
+        }
+
+        // 일정산 업데이트
+        function updateDailySettlement() {
+            var totalRevenue = completedServices.reduce(function(sum, service) {
+                return sum + service.revenue;
+            }, 0);
+            
+            var completedCount = completedServices.length;
+            var averageAmount = completedCount > 0 ? Math.round(totalRevenue / completedCount) : 0;
+            
+            document.getElementById('totalRevenue').textContent = formatMoney(totalRevenue);
+            document.getElementById('completedServices').textContent = completedCount + '건';
+            document.getElementById('averageAmount').textContent = formatMoney(averageAmount);
+        }
+
+        // 담당자 정산 업데이트
+        function updateTherapistSettlement() {
+            var therapistSettlement = document.getElementById('therapistSettlement');
+            var html = '';
+            
+            var therapistNames = Object.keys(therapistData);
+            
+            if (therapistNames.length === 0) {
+                html = '<div class="text-sm text-gray-600">담당자가 없습니다.</div>';
+            } else {
+                var totalTherapistRevenue = 0;
+                var totalServices = 0;
+                var totalTime = 0;
+                
+                therapistNames.forEach(function(name) {
+                    var data = therapistData[name];
+                    totalTherapistRevenue += data.revenue;
+                    totalServices += data.count;
+                    totalTime += data.totalTime;
+                    
+                    var servicesText = data.services.length > 0 ? data.services.join('분, ') + '분' : '';
+                    
+                    html += '<div class="flex flex-col mb-2 p-2 bg-gray-50 rounded">' +
+                            '<div class="flex justify-between items-center">' +
+                                '<span class="font-semibold">' + name + ':</span>' +
+                                '<span class="font-bold text-green-600 cursor-pointer" onclick="editTherapistRevenue(\'' + name + '\')">' +
+                                    '[' + formatMoney(data.revenue) + ']' +
+                                '</span>' +
+                            '</div>' +
+                            '<div class="text-xs text-gray-600 mt-1">' +
+                                '시간: ' + data.totalTime + '분 (' + data.count + '건)' +
+                            '</div>' +
+                            (servicesText ? 
+                                '<div class="text-xs text-gray-500">' +
+                                    '📋 개별: ' + servicesText +
+                                '</div>' : '') +
+                            '<div class="flex gap-1 mt-1">' +
+                                '<button onclick="editTherapistRevenue(\'' + name + '\')" class="mobile-btn text-xs bg-blue-500 text-white">' +
+                                    '<i class="fas fa-edit"></i>' +
+                                '</button>' +
+                                '<button onclick="resetTherapistRevenue(\'' + name + '\')" class="mobile-btn text-xs bg-red-500 text-white">' +
+                                    '<i class="fas fa-refresh"></i>' +
+                                '</button>' +
+                            '</div>' +
+                        '</div>';
+                });
+                
+                html += '<div class="text-sm font-bold border-t pt-2 mt-2">' +
+                        '총 담당자: ' + therapistNames.length + '명 | ' +
+                        '총 시간: ' + totalTime + '분 | ' +
+                        '총 서비스: ' + totalServices + '건' +
+                        '</div>';
+            }
+            
+            therapistSettlement.innerHTML = html;
+        }
+
+        // 완료 로그 업데이트
+        function updateCompletedLog() {
+            var completedLog = document.getElementById('completedLog');
+            
+            if (completedServices.length === 0) {
+                completedLog.innerHTML = '<div class="text-sm text-gray-600">완료된 서비스가 없습니다.</div>';
+                return;
+            }
+            
+            var html = '';
+            var totalRevenue = 0;
+            
+            completedServices.forEach(function(service) {
+                totalRevenue += service.revenue;
+                html += '<div class="flex justify-between items-center text-sm border-b pb-1 mb-1">' +
+                        '<span>' + service.time + ' | ' + service.roomName + ' | ' + service.serviceTime + '분</span>' +
+                        '<span class="font-bold text-green-600 cursor-pointer" onclick="editServiceRevenue(' + service.id + ')">' +
+                            '[' + formatMoney(service.revenue) + ']' +
+                        '</span>' +
+                    '</div>';
+            });
+            
+            html += '<div class="text-sm font-bold border-t pt-2 mt-2 flex justify-between">' +
+                    '<span>📊 총 서비스: ' + completedServices.length + '건</span>' +
+                    '<span class="text-green-600">💵 총 합계: ' + formatMoney(totalRevenue) + '</span>' +
+                '</div>';
+            
+            completedLog.innerHTML = html;
+        }
+
+        // 돈 형식 변환
+        function formatMoney(amount) {
+            return amount.toLocaleString() + '원';
+        }
+
+        // 총 매출 수정
+        function editTotalRevenue() {
+            var currentTotal = completedServices.reduce(function(sum, service) {
+                return sum + service.revenue;
+            }, 0);
+            
+            var newTotal = prompt('새로운 총 매출을 입력하세요:', currentTotal);
+            if (newTotal !== null && !isNaN(newTotal)) {
+                var diff = parseInt(newTotal) - currentTotal;
+                if (diff !== 0) {
+                    // 차액을 조정 항목으로 추가
+                    var adjustService = {
+                        id: Date.now(),
+                        time: new Date().toLocaleTimeString('ko-KR', { hour12: false }),
+                        roomName: '조정',
+                        therapist: '관리자',
+                        serviceTime: 0,
+                        revenue: diff,
+                        timestamp: Date.now()
+                    };
+                    completedServices.unshift(adjustService);
+                    updateDashboard();
+                    saveData();
+                }
+            }
+        }
+
+        // 일정산 리셋
+        function resetDaily() {
+            if (confirm('모든 일정산 데이터를 초기화하시겠습니까?')) {
+                completedServices = [];
+                therapistData = {};
+                updateDashboard();
+                saveData();
+                console.log('💵 일정산 리셋 완료');
+            }
+        }
+
+        // 담당자 추가
+        function addTherapist() {
+            var name = prompt('새 담당자명을 입력하세요:');
+            if (name && name.trim()) {
+                therapistData[name.trim()] = {
+                    revenue: 0,
+                    count: 0,
+                    totalTime: 0,
+                    services: []
+                };
+                updateDashboard();
+                saveData();
+            }
+        }
+
+        // 담당자 매출 수정
+        function editTherapistRevenue(name) {
+            var currentRevenue = therapistData[name] ? therapistData[name].revenue : 0;
+            var newRevenue = prompt(name + '님의 새로운 매출을 입력하세요:', currentRevenue);
+            
+            if (newRevenue !== null && !isNaN(newRevenue)) {
+                if (!therapistData[name]) {
+                    therapistData[name] = { revenue: 0, count: 0, totalTime: 0, services: [] };
+                }
+                therapistData[name].revenue = parseInt(newRevenue);
+                updateDashboard();
+                saveData();
+            }
+        }
+
+        // 담당자 매출 리셋
+        function resetTherapistRevenue(name) {
+            if (confirm(name + '님의 정산을 초기화하시겠습니까?')) {
+                if (therapistData[name]) {
+                    therapistData[name].revenue = 0;
+                    therapistData[name].count = 0;
+                    therapistData[name].totalTime = 0;
+                    therapistData[name].services = [];
+                    updateDashboard();
+                    saveData();
+                }
+            }
+        }
+
+        // 서비스 매출 수정
+        function editServiceRevenue(serviceId) {
+            var service = completedServices.find(function(s) { return s.id === serviceId; });
+            if (!service) return;
+            
+            var newRevenue = prompt('서비스 매출을 수정하세요:', service.revenue);
+            if (newRevenue !== null && !isNaN(newRevenue)) {
+                service.revenue = parseInt(newRevenue);
+                updateDashboard();
+                saveData();
+            }
+        }
+
+        // 드래그 앤 드롭 설정
+        function setupDragAndDrop() {
+            var cards = document.querySelectorAll('.timer-card');
+            
+            cards.forEach(function(card) {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragover', handleDragOver);
+                card.addEventListener('drop', handleDrop);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.currentTarget.dataset.timerId);
+            e.currentTarget.classList.add('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            
+            var draggedId = parseInt(e.dataTransfer.getData('text/plain'));
+            var targetId = parseInt(e.currentTarget.dataset.timerId);
+            
+            if (draggedId !== targetId) {
+                // 순서 변경
+                var draggedIndex = timers.findIndex(function(t) { return t.id === draggedId; });
+                var targetIndex = timers.findIndex(function(t) { return t.id === targetId; });
+                
+                var draggedTimer = timers.splice(draggedIndex, 1)[0];
+                timers.splice(targetIndex, 0, draggedTimer);
+                
+                updateDisplay();
+                updateDashboard();
+                saveData();
+                
+                console.log('🔄 순서 변경');
+            }
+            
+            // 스타일 리셋
+            document.querySelectorAll('.timer-card').forEach(function(card) {
+                card.classList.remove('drag-over', 'dragging');
+            });
+        }
+
+        function handleDragEnd(e) {
+            document.querySelectorAll('.timer-card').forEach(function(card) {
+                card.classList.remove('drag-over', 'dragging');
+            });
+        }
+
+        // 데이터 저장
+        function saveData() {
+            try {
+                localStorage.setItem('massageTimers', JSON.stringify(timers));
+                localStorage.setItem('massageCompletedServices', JSON.stringify(completedServices));
+                localStorage.setItem('massageTherapistData', JSON.stringify(therapistData));
+            } catch (error) {
+                console.warn('localStorage 저장 실패:', error);
+            }
+        }
+
+        // 데이터 로드
+        function loadData() {
+            try {
+                var savedTimers = localStorage.getItem('massageTimers');
+                if (savedTimers) {
+                    timers = JSON.parse(savedTimers);
+                    console.log('💾 저장된 타이머 로드:', timers.length + '개');
+                }
+                
+                var savedServices = localStorage.getItem('massageCompletedServices');
+                if (savedServices) {
+                    completedServices = JSON.parse(savedServices);
+                    console.log('💾 저장된 완료 서비스 로드:', completedServices.length + '개');
+                }
+                
+                var savedTherapistData = localStorage.getItem('massageTherapistData');
+                if (savedTherapistData) {
+                    therapistData = JSON.parse(savedTherapistData);
+                    console.log('💾 저장된 담당자 데이터 로드');
+                }
+            } catch (error) {
+                console.warn('localStorage 로드 실패:', error);
+                timers = [];
+                completedServices = [];
+                therapistData = {};
+            }
+        }
+
+        console.log('🎯 별다방스웨디시 매장관리 시스템 준비 완료');
+    </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"96649d8dd87e29da","serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"version":"2025.7.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
+</body>
+</html>
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDmQtHH%2FuNEKYZWWVyParc%2FHMAGUo8ylTTQyGovCKGiCZdTrrI5Xfpwel5rJsyk7t8KttPVnUj3rZ4Hxg1wi%2BpAGxpEy56pmi7BiNB%2BwnAJkxjsgFuCiFB4wiAy4Kjd9CHlbNUVwJqUdvnrMPAO%2F0aSbVRAE%2FzaB2RoyQtABT3d1TU61IkDlGk8ZyDr%2FmhO5Qwf6hjCuOClvwQfA9RxsQH8dFl8fmrNhCuGI%2B8Vt7L5WXQ40SCDMU8I7nLT0BsAHBXYt7csT1AvCDyNszVTQPEmoS%2FHL9y1jjjPgolnygdx4dI%2Byi4Jp%2B%2BdtwNta%2By3Bgfn5omK8DSKyRTl7Mps%2FkCbVbCQCDyl3TqFziMlcFbhzcuhMzeXr0sI6cxW7%2BF%2FOzK0DIzHSPLLo9Qh0hHjOgT7WpqrH89xbMD7BBmS%2FyqHRfSt%2BQ4GLdtqPk%2F9%2F9YCLqS0Xj%2FtzwAxvxN5pnBSKnkTzq%2BotEq%2FihnTvtO%2BjI%2BhkHq519YyKSKjhjK3zD5EMCFQuKnUVtt%2BCdfnLTw6Dt%2BB0%3D";
+        window.__genspark_locale = "ko-KR";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDmQtHH/uNEKYZWWVyParc/HMAGUo8ylTTQyGovCKGiCZdTrrI5Xfpwel5rJsyk7t8KttPVnUj3rZ4Hxg1wi+pAGxpEy56pmi7BiNB+wnAJkxjsgFuCiFB4wiAy4Kjd9CHlbNUVwJqUdvnrMPAO/0aSbVRAE/zaB2RoyQtABT3d1TU61IkDlGk8ZyDr/mhO5Qwf6hjCuOClvwQfA9RxsQH8dFl8fmrNhCuGI+8Vt7L5WXQ40SCDMU8I7nLT0BsAHBXYt7csT1AvCDyNszVTQPEmoS/HL9y1jjjPgolnygdx4dI+yi4Jp++dtwNta+y3Bgfn5omK8DSKyRTl7Mps/kCbVbCQCDyl3TqFziMlcFbhzcuhMzeXr0sI6cxW7+F/OzK0DIzHSPLLo9Qh0hHjOgT7WpqrH89xbMD7BBmS/yqHRfSt+Q4GLdtqPk/9/9YCLqS0Xj/tzwAxvxN5pnBSKnkTzq+otEq/ihnTvtO+jI+hkHq519YyKSKjhjK3zD5EMCFQuKnUVtt+CdfnLTw6Dt+B0=";
+    </script>
+    
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
+    
